@@ -1,7 +1,10 @@
 import { analyzeBusiness, AuditInput, AuditResult } from "./analyzer";
 
+type Interpretation = Pick<AuditResult, "summary" | "insights" | "actionPlan">;
+
 export async function analyzeWithAI(input: AuditInput): Promise<AuditResult> {
-  if (!process.env.OPENAI_API_KEY) return analyzeBusiness(input);
+  const deterministic = await analyzeBusiness(input);
+  if (!process.env.OPENAI_API_KEY) return deterministic;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -16,29 +19,27 @@ export async function analyzeWithAI(input: AuditInput): Promise<AuditResult> {
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: JSON.stringify(input) },
+          { role: "user", content: JSON.stringify({ input, audit: { overallScore: deterministic.overallScore, categories: deterministic.categories, findings: deterministic.findings, topOpportunities: deterministic.topOpportunities } }) },
         ],
       }),
       signal: AbortSignal.timeout(15000),
     });
 
-    if (!response.ok) return analyzeBusiness(input);
+    if (!response.ok) return deterministic;
     const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
     const content = payload.choices?.[0]?.message?.content;
-    if (!content) return analyzeBusiness(input);
+    if (!content) return deterministic;
     const parsed: unknown = JSON.parse(content);
-    return isAuditResult(parsed) ? parsed : analyzeBusiness(input);
+    return isInterpretation(parsed) ? { ...deterministic, ...parsed } : deterministic;
   } catch {
-    return analyzeBusiness(input);
+    return deterministic;
   }
 }
 
-const SYSTEM_PROMPT = `You produce a practical local-business growth audit in JSON. Use only the business fields supplied by the user. This is not a website crawl: never claim to have verified traffic, reviews, rankings, conversions, or website content. Return exactly these keys: score (integer 0-100), categories (website, localSeo, reviews, leadGeneration, content, offer as integers 0-100), strengths (3 strings), opportunities (4 strings formatted as Title|Description), priority (category, title, description, impact where impact is High, Medium, or Low), and actions (5 objects with title, description, priority). Keep recommendations specific to the supplied industry and city when present. Return JSON only.`;
+const SYSTEM_PROMPT = `You interpret an already-scored local business audit. Never change, recalculate, or invent scores or findings. Return JSON with exactly summary (string), insights (array of concise strings), and actionPlan (array of 3 to 5 objects with title, description, and priority using only CRITICAL, HIGH, MEDIUM, GOOD, or EXCELLENT). Base every statement on supplied audit data and use practical business-friendly language.`;
 
-function isAuditResult(value: unknown): value is AuditResult {
+function isInterpretation(value: unknown): value is Interpretation {
   if (!value || typeof value !== "object") return false;
-  const result = value as Partial<AuditResult>;
-  const categories = result.categories;
-  if (!categories) return false;
-  return Number.isInteger(result.score) && Array.isArray(result.strengths) && result.strengths.length >= 3 && Array.isArray(result.opportunities) && result.opportunities.length >= 3 && Boolean(result.priority?.category) && Boolean(result.priority?.title) && Array.isArray(result.actions) && result.actions.length >= 3 && Object.values(categories).every((score) => typeof score === "number" && score >= 0 && score <= 100);
+  const result = value as Partial<Interpretation>;
+  return typeof result.summary === "string" && Array.isArray(result.insights) && result.insights.every((item) => typeof item === "string") && Array.isArray(result.actionPlan) && result.actionPlan.length > 0 && result.actionPlan.every((action) => typeof action.title === "string" && typeof action.description === "string" && typeof action.priority === "string");
 }
