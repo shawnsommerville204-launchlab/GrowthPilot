@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { analyzeWithAI } from "@/lib/ai";
-import { saveLead } from "@/lib/leads";
+import { analyzeWithAI, generateRecommendationPlan } from "@/lib/ai";
 import { validateAuditInput } from "@/lib/audit/validators";
 
 export const maxDuration = 20;
@@ -16,21 +15,27 @@ export async function POST(request: Request) {
     const validation = validateAuditInput(await request.json());
     if (!validation.input) return NextResponse.json({ error: validation.error }, { status: 400 });
     const input = validation.input;
-    const auditId = crypto.randomUUID();
     const result = await analyzeWithAI(input);
-
-    let leadId = "";
-    let crmWarning: string | null = null;
-    try {
-      const leadResult = await saveLead(input, result, auditId);
-      leadId = leadResult.lead.id;
-    } catch (error) {
-      crmWarning = "Lead tracking is temporarily unavailable; the audit was still saved.";
-      console.error("CRM lead creation failed", error);
-    }
-
-    const audit = { id: auditId, auditId, ...input, ...result, createdAt: new Date().toISOString(), leadId };
-    return NextResponse.json({ success: true, auditId, leadId, audit, input, result, crmWarning });
+const aiAnalysis = await generateRecommendationPlan(input, result);
+const completeResult = {
+  ...result,
+  aiAnalysis,
+};
+    const auditId = crypto.randomUUID();
+    const audit = {
+  id: auditId,
+  auditId,
+  ...input,
+  ...completeResult,
+  createdAt: new Date().toISOString(),
+};
+   return NextResponse.json({
+  success: true,
+  auditId,
+  audit,
+  input,
+  result: completeResult,
+});
   } catch {
     return NextResponse.json({ error: "We could not complete that audit. Please try again." }, { status: 500 });
   }

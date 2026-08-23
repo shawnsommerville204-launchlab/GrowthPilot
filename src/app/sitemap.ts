@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function sitemap(): MetadataRoute.Sitemap { const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://growthpilot-azure.vercel.app"; return ["/", "/audit", "/contact", "/privacy", "/terms", "/checkout/strategy"].map((path) => ({ url: `${base}${path}`, lastModified: new Date() })); }

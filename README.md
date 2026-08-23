@@ -7,8 +7,9 @@ GrowthPilot is a focused growth audit for local home-service businesses. It turn
 - Premium responsive landing page and audit form
 - Server-side website signal analysis with deterministic scoring (no API keys required)
 - Growth Score report with category scores and priority actions
-- In-memory lead capture abstraction
-- Conversion CTAs ready to connect to Stripe or a sales inbox
+- Post-audit lead capture with server-side validation and durable local JSON persistence
+- Structured AI diagnosis, action plan, service mapping, and CRM analysis persistence
+- Configurable offers, Stripe-hosted strategy checkout, customer-facing proposals, and trust pages
 
 ## Run locally
 
@@ -32,13 +33,24 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Future Airtable storage can use:
+Optional Airtable storage configuration is reserved for deployments that connect the CRM adapter:
 
 ```env
 AIRTABLE_PAT=
 AIRTABLE_BASE_ID=
-AIRTABLE_TABLE_NAME=
+AIRTABLE_TABLE_NAME=Leads
+NEXT_PUBLIC_BOOKING_URL=
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_STRATEGY_SESSION=
+STRIPE_WEBHOOK_SECRET=
 ```
+
+## Lead storage note
+
+Without Airtable credentials, the server stores leads in `data/leads.json` for local development. That directory is git-ignored. Production deployments should provide a shared persistence provider before running multiple instances.
+
+The strategy checkout uses Stripe Checkout through `POST /api/checkout`. Create a Stripe Price for the $99 strategy session and set its ID in `STRIPE_PRICE_STRATEGY_SESSION`. The checkout route never trusts a browser redirect as payment confirmation; connect `STRIPE_WEBHOOK_SECRET` to a webhook handler before using paid status or fulfillment automation. Operators can create a printable proposal at `/proposals/[leadId]`.
 
 ## Important limitation
 
@@ -56,7 +68,7 @@ Real website crawling, AI analysis, Google Business Profile and review analysis,
 
 ### V3
 
-Stripe, user accounts, client dashboard, automated reports, and monthly monitoring.
+User accounts, client dashboard, automated reports, Stripe webhooks, and monthly monitoring.
 
 ### V4
 

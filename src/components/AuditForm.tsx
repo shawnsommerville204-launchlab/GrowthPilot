@@ -2,6 +2,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { writeStoredAudit } from "@/lib/audit/storage";
+import { trackEvent } from "@/lib/analytics";
 
 export default function AuditForm() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function AuditForm() {
     }
 
     setLoading(true);
+    trackEvent("audit_started");
     try {
       const response = await fetch("/api/audit", {
         method: "POST",
@@ -49,10 +51,10 @@ export default function AuditForm() {
       const stored = {
         result: data.result,
         input: data.input,
-        audit: { id: data.id, createdAt: data.audit?.createdAt ?? new Date().toISOString() },
-        id: data.id,
+        audit: { id: data.auditId, createdAt: data.audit?.createdAt ?? new Date().toISOString() },
       };
       writeStoredAudit(stored);
+      trackEvent("audit_completed", { score: data.result.overallScore });
       router.push("/audit");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong. Please try again.");

@@ -1,4 +1,4 @@
-import { AuditInput, WebsiteSignals } from "./types";
+import type { AuditInput, WebsiteSignals } from "./types.ts";
 
 const FETCH_TIMEOUT_MS = 10000;
 

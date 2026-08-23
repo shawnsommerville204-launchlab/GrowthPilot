@@ -1,30 +1,37 @@
-import { AuditInput, AuditResult } from "./analyzer";
-import { buildPrimaryOpportunity, getNextAction, leadService } from "./crm/service";
-import { Lead } from "./crm/types";
+import type { AuditInput, AuditResult } from "./analyzer.ts";
+import { buildPrimaryOpportunity, getNextAction, leadService } from "./crm/service.ts";
+import type { Lead } from "./crm/types.ts";
 
-export type { Lead, LeadStatus } from "./crm/types";
+export type { Lead, LeadStatus } from "./crm/types.ts";
 
 export async function saveLead(input: AuditInput, result: AuditResult, auditId: string) {
   const existing = await leadService.findExistingLead({ email: input.email, website: input.website });
   const { primaryOpportunity, recommendedService } = buildPrimaryOpportunity(result);
   const payload = {
     auditId,
+    firstName: "",
+    lastName: "",
     businessName: input.businessName,
     website: input.website,
     industry: input.industry,
     city: input.city,
     email: input.email,
+    phone: "",
+    biggestChallenge: "",
     overallScore: result.overallScore,
+    auditAnswers: input as unknown as Record<string, string>,
+    auditResults: { overallScore: result.overallScore, categories: result.categories, findings: result.findings, summary: result.summary },
+    recommendations: result.topOpportunities,
     topOpportunity: result.topOpportunities[0]?.title ?? "Growth opportunity",
     primaryOpportunity,
     recommendedService,
     categoryScores: result.categories,
     topOpportunities: result.topOpportunities,
-    status: existing?.status ?? "New",
+    status: existing?.status ?? ("NEW LEAD" as const),
     source: "GrowthPilot Audit" as const,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    nextAction: getNextAction(existing?.status ?? "New"),
+    nextAction: getNextAction(existing?.status ?? "NEW LEAD"),
   };
 
   if (existing) {

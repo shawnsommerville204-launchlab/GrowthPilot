@@ -1,4 +1,4 @@
-import { AuditInput } from "./types";
+import type { AuditInput } from "./types.ts";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const limits = { businessName: 120, website: 2048, industry: 100, city: 100, email: 254 } as const;

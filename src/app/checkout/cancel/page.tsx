@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function CheckoutCancelPage() { return <main className="legal-page"><div className="legal-shell"><span className="eyebrow">CHECKOUT CANCELED</span><h1>Your audit is still here.</h1><p className="lead-copy">No payment was completed. You can review your recommendations or return when you are ready.</p><Link href="/" className="button button-primary">RETURN TO GROWTHPILOT</Link></div></main>; }

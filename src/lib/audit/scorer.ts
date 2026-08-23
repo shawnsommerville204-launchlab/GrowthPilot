@@ -1,4 +1,4 @@
-import { AuditInput, CategoryScores, WebsiteSignals } from "./types";
+import type { AuditInput, CategoryScores, WebsiteSignals } from "./types.ts";
 
 export const CATEGORY_WEIGHTS = { website: 0.2, localSeo: 0.2, reputation: 0.15, leadGeneration: 0.2, offer: 0.15, content: 0.1 } as const;
 

@@ -1,4 +1,4 @@
-import { AuditInput, AuditResult, CategoryKey, Opportunity, Priority, WebsiteSignals } from "./types";
+import type { AuditInput, AuditResult, CategoryKey, Opportunity, Priority, WebsiteSignals } from "./types.ts";
 
 const labels: Record<CategoryKey, string> = { website: "Website", localSeo: "Local SEO", reputation: "Reputation", leadGeneration: "Lead Generation", offer: "Offer", content: "Content" };
 

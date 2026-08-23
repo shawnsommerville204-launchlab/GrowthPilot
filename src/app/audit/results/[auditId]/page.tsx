@@ -42,5 +42,5 @@ export default function AuditResultsPage({ params }: { params: { auditId: string
     );
   }
 
-  return <Report result={audit.result} input={audit.input} auditId={audit.audit?.id ?? audit.id} createdAt={audit.audit?.createdAt} />;
+  return <Report result={audit.result} input={audit.input} auditId={audit.audit?.id ?? audit.id} leadId={audit.id} createdAt={audit.audit?.createdAt} />;
 }

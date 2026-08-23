@@ -1,10 +1,10 @@
-import { analyzeWebsite } from "./audit/analyzer";
-import { buildLegacyFields, buildRecommendations } from "./audit/recommendations";
-import { scoreAudit } from "./audit/scorer";
-import { AuditInput, AuditResult } from "./audit/types";
+import { analyzeWebsite } from "./audit/analyzer.ts";
+import { buildLegacyFields, buildRecommendations } from "./audit/recommendations.ts";
+import { scoreAudit } from "./audit/scorer.ts";
+import type { AuditInput, AuditResult } from "./audit/types.ts";
 
-export type { AuditInput, AuditResult, CategoryKey, Priority } from "./audit/types";
-export { analyzeWebsite } from "./audit/analyzer";
+export type { AuditInput, AuditResult, CategoryKey, Priority } from "./audit/types.ts";
+export { analyzeWebsite } from "./audit/analyzer.ts";
 
 export async function analyzeBusiness(input: AuditInput): Promise<AuditResult> {
   const findings = await analyzeWebsite(input);

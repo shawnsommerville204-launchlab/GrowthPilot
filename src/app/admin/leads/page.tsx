@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Lead } from "@/lib/crm/types";
 
-const FILTERS = ["All", "New", "Contacted", "Qualified", "Won", "Lost"] as const;
+const FILTERS = ["All", "NEW LEAD", "AUDIT COMPLETED", "REVIEWED", "CONTACTED", "DISCOVERY", "PROPOSAL", "WON", "LOST"] as const;
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -28,6 +28,8 @@ export default function AdminLeadsPage() {
     const matchesQuery = values.includes(query.toLowerCase());
     return matchesFilter && matchesQuery;
   });
+  const averageScore = leads.length ? Math.round(leads.reduce((total, lead) => total + lead.overallScore, 0) / leads.length) : 0;
+  const followUp = leads.filter((lead) => ["NEW LEAD", "AUDIT COMPLETED", "REVIEWED", "CONTACTED"].includes(lead.status)).length;
 
   return (
     <main className="admin-page">
@@ -39,6 +41,14 @@ export default function AdminLeadsPage() {
           </div>
           <Link href="/" className="button button-primary">Back to site</Link>
         </header>
+
+        <div className="lead-metrics">
+          <div><span>Total leads</span><strong>{leads.length}</strong></div>
+          <div><span>New leads</span><strong>{leads.filter((lead) => lead.status === "NEW LEAD").length}</strong></div>
+          <div><span>Audits completed</span><strong>{leads.length}</strong></div>
+          <div><span>Average score</span><strong>{averageScore}<small>/100</small></strong></div>
+          <div><span>Needs follow-up</span><strong>{followUp}</strong></div>
+        </div>
 
         <div className="admin-toolbar">
           <div className="admin-filters">
@@ -66,33 +76,25 @@ export default function AdminLeadsPage() {
           <table className="lead-table">
             <thead>
               <tr>
+                <th>Lead ID</th>
                 <th>Business</th>
-                <th>Website</th>
-                <th>City</th>
+                <th>Contact</th>
                 <th>Industry</th>
-                <th>Email</th>
                 <th>Score</th>
-                <th>Primary opportunity</th>
-                <th>Recommended service</th>
                 <th>Status</th>
                 <th>Created</th>
-                <th>Updated</th>
               </tr>
             </thead>
             <tbody>
               {visibleLeads.map((lead) => (
                 <tr key={lead.id}>
-                  <td><Link href={`/admin/leads/${lead.id}`}>{lead.businessName}</Link></td>
-                  <td>{lead.website}</td>
-                  <td>{lead.city}</td>
+                  <td><Link href={`/admin/leads/${lead.id}`}>{lead.auditId}</Link></td>
+                  <td><Link href={`/admin/leads/${lead.id}`}>{lead.businessName}</Link><small>{lead.city}</small></td>
+                  <td>{lead.firstName} {lead.lastName}<small>{lead.email}</small></td>
                   <td>{lead.industry}</td>
-                  <td>{lead.email}</td>
                   <td>{lead.overallScore}</td>
-                  <td>{lead.primaryOpportunity ?? lead.topOpportunity}</td>
-                  <td>{lead.recommendedService ?? "GrowthPilot Audit Follow-Up"}</td>
                   <td><span className={`status-badge ${lead.status.toLowerCase()}`}>{lead.status}</span></td>
                   <td>{new Date(lead.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</td>
-                  <td>{new Date(lead.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</td>
                 </tr>
               ))}
             </tbody>
