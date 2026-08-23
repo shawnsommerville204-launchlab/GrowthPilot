@@ -8,7 +8,7 @@ const categories: [CategoryKey, string][] = [["website", "Website"], ["localSeo"
 
 type ReportInput = { businessName: string; website?: string; industry?: string; city?: string; email?: string };
 
-type ReportProps = { result: AuditResult; input?: ReportInput; businessName?: string; auditId?: string; createdAt?: string };
+type ReportProps = { result: AuditResult; input?: ReportInput; businessName?: string; auditId?: string; leadId?: string; createdAt?: string };
 
 export default function Report({ result, input, businessName, auditId, createdAt }: ReportProps) {
   const [shareState, setShareState] = useState("COPY AUDIT URL");
