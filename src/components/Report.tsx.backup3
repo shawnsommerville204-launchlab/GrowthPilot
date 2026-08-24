@@ -42,6 +42,7 @@ export default function Report({
 
   const name = input?.businessName ?? businessName ?? "Your business";
   const top = result.topOpportunities ?? [];
+  const overallScore = result.overallScore ?? result.score ?? 0;
 
   const date = createdAt
     ? new Date(createdAt).toLocaleDateString(undefined, {
@@ -51,12 +52,14 @@ export default function Report({
       })
     : "Today";
 
-  const overallScore = result.overallScore ?? result.score ?? 0;
-
   const shareUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/audit/results/${auditId ?? "preview"}`
       : `/audit/results/${auditId ?? "preview"}`;
+
+  const checkoutUrl = leadId
+    ? `/checkout?leadId=${encodeURIComponent(leadId)}`
+    : "/checkout";
 
   const ringStyle = {
     background: `conic-gradient(var(--cyan) 0 ${
@@ -82,7 +85,6 @@ export default function Report({
           text: shareText,
           url: shareUrl,
         });
-
         setShareState("SHARED");
       } else {
         await navigator.clipboard.writeText(shareText);
@@ -92,23 +94,16 @@ export default function Report({
       window.setTimeout(() => setShareState("COPY AUDIT URL"), 2200);
     } catch {
       setShareState("SHARE CANCELLED");
-
-      window.setTimeout(() => {
-        setShareState("COPY AUDIT URL");
-      }, 1600);
+      window.setTimeout(() => setShareState("COPY AUDIT URL"), 1600);
     }
   }
-
-  const checkoutHref = leadId
-    ? `/checkout?leadId=${encodeURIComponent(leadId)}`
-    : "/checkout";
 
   return (
     <main className="report-page">
       <header className="report-nav">
-        <Link className="brand" href="/">
+        <a className="brand" href="/">
           GROWTH<span>PILOT</span>
-        </Link>
+        </a>
 
         <div className="report-actions">
           <button
@@ -127,13 +122,15 @@ export default function Report({
             {shareState}
           </button>
 
-          <Link href="/audit" className="back-link">
+          <Link href="/" className="back-link">
             New audit <span>↗</span>
           </Link>
         </div>
       </header>
 
       <div className="report-wrap">
+        {/* HEADER */}
+
         <header className="report-meta">
           <div>
             <span className="eyebrow">DIGITAL GROWTH AUDIT</span>
@@ -176,13 +173,13 @@ export default function Report({
 
               <p>
                 {result.summary ||
-                  "Your audit identifies the areas most likely to affect visibility, trust, and conversion."}
+                  "Your audit identifies the areas creating the biggest opportunities for growth."}
               </p>
             </div>
           </div>
         </section>
 
-        {/* SCORECARD */}
+        {/* CATEGORY SCORECARD */}
 
         <section className="report-section">
           <div className="section-header">
@@ -197,7 +194,7 @@ export default function Report({
               const opportunity = top.find(
                 (item) =>
                   normalizeCategory(item.category) ===
-                  normalizeCategory(label),
+                  normalizeCategory(label)
               );
 
               return (
@@ -217,7 +214,7 @@ export default function Report({
 
                   <span
                     className={`category-status status-${statusFor(
-                      score,
+                      score
                     ).toLowerCase()}`}
                   >
                     {statusFor(score).replace("_", " ")}
@@ -227,7 +224,7 @@ export default function Report({
                     {categoryExplanation(
                       key,
                       result,
-                      opportunity?.explanation,
+                      opportunity?.explanation
                     )}
                   </p>
                 </article>
@@ -236,7 +233,7 @@ export default function Report({
           </div>
         </section>
 
-        {/* OPPORTUNITIES */}
+        {/* TOP OPPORTUNITIES */}
 
         <section className="report-section opportunity-section">
           <div className="section-header light-label">
@@ -253,7 +250,6 @@ export default function Report({
                 >
                   <div className="opportunity-card-top">
                     <span>Opportunity #{index + 1}</span>
-
                     <b>{opportunity.category}</b>
                   </div>
 
@@ -265,54 +261,67 @@ export default function Report({
                     {opportunity.priority}
                   </span>
 
-                  <p>{opportunity.explanation}</p>
+                  <p>{shorten(opportunity.explanation)}</p>
 
-                  {/* Do NOT reveal the implementation recommendations */}
-                  <div className="locked-recommendations">
-                    <span>🔒</span>
+                  <div className="recommendation-teaser">
+                    <strong>Actionable improvements identified.</strong>
 
-                    <div>
-                      <strong>Detailed recommendations locked</strong>
-
-                      <p>
-                        Your audit identified the problem. Your Growth Strategy
-                        Session reveals exactly what to change and how to
-                        prioritize it.
-                      </p>
-                    </div>
+                    <p>
+                      Your audit found specific ways to improve this area.
+                      The detailed fix sequence and implementation priorities
+                      are included in the Growth Strategy Session.
+                    </p>
                   </div>
                 </article>
               ))
             ) : (
               <article className="opportunity-card">
                 <div className="opportunity-card-top">
-                  <span>Opportunity #1</span>
-
+                  <span>Opportunity</span>
                   <b>Growth</b>
                 </div>
 
-                <h3>Strong base, steady improvements ahead</h3>
+                <h3>Strong foundation with room to optimize</h3>
 
                 <strong>{overallScore} / 100</strong>
 
                 <span className="opportunity-priority">GOOD</span>
 
                 <p>
-                  The current audit did not surface significant weaknesses.
-                  The next step is identifying which improvements could create
-                  the greatest return.
+                  The audit did not identify a major weakness, but there are
+                  still opportunities to improve conversion and growth.
                 </p>
               </article>
             )}
           </div>
+
+          {/* SECONDARY CTA */}
+
+          <div className="report-inline-cta">
+            <div>
+              <span className="eyebrow">WANT THE NEXT STEP?</span>
+
+              <h3>Know what needs attention. Now get the strategy.</h3>
+
+              <p>
+                Get the priority sequence, detailed recommendations, and
+                implementation roadmap built around this audit.
+              </p>
+            </div>
+
+            <Link className="button button-primary" href={checkoutUrl}>
+              VIEW GROWTH STRATEGY — $99
+              <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
         </section>
 
-        {/* WHY THIS MATTERS */}
+        {/* WHAT WE FOUND */}
 
         <section className="report-section">
           <div className="section-header">
             <span>03</span>
-            <h2>Why this matters</h2>
+            <h2>What we found</h2>
           </div>
 
           <div className="why-grid">
@@ -325,12 +334,10 @@ export default function Report({
 
                 <h3>{opportunity.title}</h3>
 
-                <p>
-                  <strong>Finding:</strong> {opportunity.explanation}
-                </p>
+                <p>{shorten(opportunity.explanation)}</p>
 
                 <p>
-                  <strong>Business impact:</strong>{" "}
+                  <strong>Why it matters:</strong>{" "}
                   {opportunityImpact(opportunity.category)}
                 </p>
               </article>
@@ -338,94 +345,131 @@ export default function Report({
           </div>
         </section>
 
-        {/* LOCKED STRATEGY */}
+        {/* OPPORTUNITY AREAS */}
 
         <section className="report-section">
           <div className="section-header">
             <span>04</span>
-            <h2>Your personalized growth plan</h2>
+            <h2>Growth opportunity areas</h2>
           </div>
 
-          <div className="locked-plan">
-            <div className="locked-plan-icon">🔒</div>
-
-            <span className="eyebrow">GROWTH STRATEGY SESSION</span>
-
-            <h2>
-              You know where the problems are.
-              <br />
-              Now find out what to do about them.
-            </h2>
-
-            <p>
-              Your free audit identifies the highest-impact opportunities.
-              The Growth Strategy Session turns those findings into a
-              prioritized implementation roadmap.
-            </p>
-
-            <div className="locked-plan-grid">
-              <div>
-                <strong>01</strong>
-                <span>Priority opportunities</span>
+          <div className="quick-win-grid">
+            {top.slice(0, 3).map((opportunity) => (
+              <div className="quick-win" key={opportunity.category}>
+                <span>✓</span>
+                {opportunity.title}
               </div>
+            ))}
 
-              <div>
-                <strong>02</strong>
-                <span>Personalized recommendations</span>
-              </div>
+            {!top.length && (
+              <>
+                <div className="quick-win">
+                  <span>✓</span>
+                  Improve conversion
+                </div>
 
-              <div>
-                <strong>03</strong>
-                <span>30/60/90-day roadmap</span>
-              </div>
+                <div className="quick-win">
+                  <span>✓</span>
+                  Strengthen visibility
+                </div>
 
-              <div>
-                <strong>04</strong>
-                <span>Implementation sequence</span>
-              </div>
-            </div>
-
-            <Link className="button button-primary" href={checkoutHref}>
-              GET MY GROWTH PLAN — $99
-              <span aria-hidden="true">↗</span>
-            </Link>
-
-            <small>One-time payment · Secure checkout powered by Stripe</small>
+                <div className="quick-win">
+                  <span>✓</span>
+                  Increase customer trust
+                </div>
+              </>
+            )}
           </div>
         </section>
 
-        {/* FREE REPORT SUMMARY */}
+        {/* 30 DAY PREVIEW */}
 
         <section className="report-section">
           <div className="section-header">
             <span>05</span>
-            <h2>What your audit tells us</h2>
+            <h2>Your 30-day growth plan</h2>
+          </div>
+
+          <div className="plan-grid">
+            <article className="plan-card">
+              <span className="plan-week">WEEK 1</span>
+              <h3>Identify the highest-impact issue</h3>
+              <p>
+                Focus attention on the issue most likely to affect growth.
+              </p>
+            </article>
+
+            <article className="plan-card">
+              <span className="plan-week">WEEK 2</span>
+              <h3>Prioritize the opportunity</h3>
+              <p>
+                Determine which improvement should happen first.
+              </p>
+            </article>
+
+            <article className="plan-card">
+              <span className="plan-week">WEEK 3</span>
+              <h3>Build the improvement sequence</h3>
+              <p>
+                Translate the findings into an actionable implementation
+                sequence.
+              </p>
+            </article>
+
+            <article className="plan-card">
+              <span className="plan-week">WEEK 4</span>
+              <h3>Measure and optimize</h3>
+              <p>
+                Establish the next measurements and improvements.
+              </p>
+            </article>
+          </div>
+
+          <div className="strategy-lock">
+            <span className="eyebrow">FULL STRATEGY</span>
+
+            <h3>Your detailed implementation roadmap is ready to be built.</h3>
+
+            <p>
+              The Growth Strategy Session turns this diagnosis into a
+              prioritized plan with specific recommendations and next steps.
+            </p>
+
+            <Link className="button button-primary" href={checkoutUrl}>
+              GET MY GROWTH STRATEGY
+              <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+        </section>
+
+        {/* EXECUTIVE SUMMARY */}
+
+        <section className="report-section">
+          <div className="section-header">
+            <span>06</span>
+            <h2>Executive summary</h2>
           </div>
 
           <div className="summary-box">
-            <p>
-              {buildFreeSummary(name, result)}
-            </p>
+            <p>{buildExecutiveSummary(name, result)}</p>
           </div>
         </section>
 
         {/* FINAL CTA */}
 
         <section className="report-cta">
-          <span className="eyebrow">READY FOR THE NEXT STEP?</span>
+          <span className="eyebrow">READY TO TURN THIS AUDIT INTO A PLAN?</span>
 
-          <h2>
-            Stop guessing what to fix.
-            <br />
-            Get your GrowthPilot strategy.
-          </h2>
+          <h2>Turn your audit into a prioritized growth strategy.</h2>
 
           <p>
-            Turn your audit into a prioritized plan built around your business.
+            Your free audit shows where the biggest opportunities are. The
+            Growth Strategy Session turns those findings into a practical
+            implementation roadmap.
           </p>
 
-          <Link className="button button-primary" href={checkoutHref}>
-            GET MY GROWTH PLAN — $99
+          <Link className="button button-primary" href={checkoutUrl}>
+            GET MY GROWTH STRATEGY
             <span aria-hidden="true">↗</span>
           </Link>
         </section>
@@ -436,25 +480,17 @@ export default function Report({
 
 function scoreInterpretation(score: number): string {
   if (score >= 90) return "Excellent digital foundation";
-
   if (score >= 75) return "Strong foundation with opportunities";
-
   if (score >= 60) return "Moderate growth opportunity";
-
   if (score >= 40) return "Significant growth opportunities";
-
   return "Critical growth gaps";
 }
 
 function statusFor(score: number): Priority {
   if (score < 40) return "CRITICAL";
-
   if (score < 60) return "HIGH";
-
   if (score < 75) return "MEDIUM";
-
   if (score < 90) return "GOOD";
-
   return "EXCELLENT";
 }
 
@@ -462,42 +498,52 @@ function normalizeCategory(value: string): string {
   return value.toLowerCase().replace(/[^a-z]/g, "");
 }
 
+function shorten(value?: string): string {
+  if (!value) {
+    return "The audit identified an opportunity that deserves closer attention.";
+  }
+
+  const clean = value.replace(/\s+/g, " ").trim();
+
+  return clean.length > 220 ? `${clean.slice(0, 217)}...` : clean;
+}
+
 function categoryExplanation(
   key: CategoryKey,
   result: AuditResult,
-  opportunity?: string,
+  opportunity?: string
 ): string {
-  if (opportunity) return opportunity;
+  if (opportunity) return shorten(opportunity);
 
   const findings = result.findings;
 
   const fallback: Record<CategoryKey, string> = {
     website: findings.fetched
-      ? "The page structure is visible and measurable, but the foundation still leaves room for conversion gains."
-      : "The site could not be fully inspected, so this category is based on the visible baseline and missing signals.",
+      ? "The website foundation is measurable, but there is room to improve conversion."
+      : "The site could not be fully inspected, so this category is based on the available signals.",
 
     localSeo: findings.hasLocationSignal
-      ? "The business is partly visible in local context, but the local value proposition is still not fully clear."
-      : "The local market signal is not strong enough to help nearby buyers immediately recognize the business.",
+      ? "The business has some local visibility signals, but the local value proposition could be clearer."
+      : "The local market signal is not strong enough to immediately connect nearby buyers with the business.",
 
     reputation:
       findings.hasReviews || findings.hasTestimonials
-        ? "Customer proof is present, but it may not yet be prominent enough to lower decision friction."
-        : "Customer trust signals are not yet strong enough to help prospects feel confident moving forward.",
+        ? "Customer proof is present, but it may not yet be prominent enough to reduce decision friction."
+        : "Trust signals are not yet strong enough to give prospects confidence.",
 
     leadGeneration:
       findings.conversionOpportunities > 0
-        ? "There is some conversion potential, but the path to contact or book still needs to be clearer."
+        ? "There is conversion potential, but the path from visitor to lead could be clearer."
         : "The next step is not obvious enough for a ready-to-buy visitor.",
 
     offer: findings.hasServiceContent
-      ? "The business message is somewhat visible, but the value proposition still needs to be easier to understand."
-      : "The core offer is not clear enough for someone comparing providers in the first few seconds.",
+      ? "The business message is visible, but the value proposition could be easier to understand."
+      : "The core offer is not clear enough for someone comparing providers.",
 
     content:
       findings.h2.length > 0
-        ? "The site has some content structure, but it is not yet doing enough to answer buyer questions in depth."
-        : "There are not enough trust-building content signals to support the research stage of the buying journey.",
+        ? "The site has content structure, but it could do more to answer buyer questions."
+        : "There are limited content signals supporting the research stage of the buying journey.",
   };
 
   return fallback[key];
@@ -515,13 +561,13 @@ function opportunityImpact(category: string): string {
       "Prospects may hesitate because they do not have enough proof to reduce uncertainty.",
 
     Website:
-      "A weak website creates friction before the customer ever reaches the business.",
+      "Website friction can prevent visitors from reaching the business.",
 
     Offer:
-      "Prospects may not quickly understand the service outcome or why this business is different.",
+      "Prospects may not immediately understand the service outcome or differentiation.",
 
     Content:
-      "Buyers researching the problem may not trust the business enough to reach out.",
+      "Buyers researching the problem may not have enough information to build confidence.",
   };
 
   return (
@@ -530,20 +576,21 @@ function opportunityImpact(category: string): string {
   );
 }
 
-function buildFreeSummary(name: string, result: AuditResult): string {
-  const categories = Object.entries(result.categories);
-
-  const strongest = categories.sort(
-    ([, left], [, right]) => right - left,
+function buildExecutiveSummary(
+  name: string,
+  result: AuditResult
+): string {
+  const strongest = Object.entries(result.categories).sort(
+    ([, left], [, right]) => right - left
   )[0];
 
-  const biggestOpportunity = result.topOpportunities?.[0];
+  const biggestOpportunity = result.topOpportunities[0];
 
-  return `${name} currently has a Growth Score of ${
+  return `${name} has a Growth Score of ${
     result.overallScore
-  }/100. The strongest area identified by the audit is ${
-    strongest?.[0] ?? "your current foundation"
-  }. The clearest opportunity is ${
+  }/100. The strongest area is ${
+    strongest ? strongest[0] : "the current foundation"
+  }. The biggest opportunity is ${
     biggestOpportunity?.category ?? "conversion"
-  }. The free audit shows where the biggest gaps are; the Growth Strategy Session is designed to determine exactly what to fix first and how to implement it.`;
+  }. The audit identified specific areas where additional growth is possible. The detailed recommendations, priority sequence, and implementation roadmap are available through the Growth Strategy Session.`;
 }
